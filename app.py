@@ -48,7 +48,7 @@ st.sidebar.header('Filters')
 selected_stocks = st.sidebar.multiselect(
     'Select assets to view',
     options=data.columns.tolist(),
-    default=data.columns.tolist()
+    default=['Lojas Renner']
 )
 
 if selected_stocks:

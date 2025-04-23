@@ -23,13 +23,20 @@ def load_main_tickers():
 def load_data(tickers_dict):
     tickers = list(tickers_dict.keys())
     names = list(tickers_dict.values())
-    stock_data = yf.Tickers(tickers)
     start_date = '2010-01-01'
     end_date = dt.today().strftime('%Y-%m-%d')
-    quotes = stock_data.history(period='1d', start=start_date, end=end_date)
-    quotes = quotes['Close']
-    quotes.columns = names  # Rename columns with company names
-    return quotes
+
+    stock_data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
+
+    close_prices = pd.DataFrame()
+
+    for ticker, name in tickers_dict.items():
+        try:
+            close_prices[name] = stock_data[ticker]['Close']
+        except KeyError:
+            st.warning(f"⚠️ Dados não encontrados para o ticker: {ticker}")
+    
+    return close_prices
 
 main_tickers = load_main_tickers()
 data = load_data(main_tickers)

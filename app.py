@@ -35,7 +35,7 @@ def load_data(tickers_dict):
             close_prices[name] = stock_data[ticker]['Close']
         except KeyError:
             st.warning(f"⚠️ Sem dados para o ticker: {ticker}")
-    
+
     return close_prices
 
 main_tickers = load_main_tickers()
@@ -45,14 +45,17 @@ st.title("📈 Brazilian Stock Dashboard")
 st.markdown("Visualize the historical performance of major Brazilian stocks.")
 
 if data.empty or data.columns.empty:
-    st.error("❌ Nenhum dado foi carregado. Verifique sua conexão ou tente novamente mais tarde.")
+    st.error("❌ Nenhum dado foi carregado. Pode ter ocorrido limite de requisições à API do Yahoo Finance. Tente novamente mais tarde.")
     st.stop()
 
 st.sidebar.header('Filters')
+
+default_selection = data.columns[:1].tolist() if not data.columns.empty else []
+
 selected_stocks = st.sidebar.multiselect(
     'Select assets to view',
     options=data.columns.tolist(),
-    default=data.columns[:1].tolist()
+    default=default_selection
 )
 
 if selected_stocks:
@@ -63,13 +66,13 @@ if not data.empty:
     initial_date = data.index.min().to_pydatetime()
     final_date = data.index.max().to_pydatetime()
 else:
-    st.error("❌ Nenhum dado foi carregado. Verifique sua conexão ou tente novamente mais tarde.")
+    st.error("❌ Nenhum dado disponível após filtro. Selecione outros ativos.")
     st.stop()
 
 slider = st.sidebar.slider(
     'Select time range',
-    min_value=initial_date, 
-    max_value=final_date, 
+    min_value=initial_date,
+    max_value=final_date,
     value=(initial_date, final_date),
     step=td(days=1)
 )

@@ -34,7 +34,7 @@ def load_data(tickers_dict):
         try:
             close_prices[name] = stock_data[ticker]['Close']
         except KeyError:
-            st.warning(f"⚠️ Dados não encontrados para o ticker: {ticker}")
+            st.warning(f"⚠️ No data found for ticker: {ticker}")
     
     return close_prices
 
@@ -54,8 +54,13 @@ selected_stocks = st.sidebar.multiselect(
 if selected_stocks:
     data = data[selected_stocks]
 
-initial_date = data.index.min().to_pydatetime()
-final_date = data.index.max().to_pydatetime()
+if not data.empty:
+    data.index = pd.to_datetime(data.index)
+    initial_date = data.index.min().to_pydatetime()
+    final_date = data.index.max().to_pydatetime()
+else:
+    st.error("Error: No data loaded. Check tickers or internet connection.")
+    st.stop()
 
 slider = st.sidebar.slider(
     'Select time range',

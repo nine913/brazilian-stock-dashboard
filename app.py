@@ -44,23 +44,26 @@ data = load_data(main_tickers)
 st.title("📈 Brazilian Stock Dashboard")
 st.markdown("Visualize the historical performance of major Brazilian stocks.")
 
+if data.empty:
+    st.error("❌ Nenhum dado foi carregado. Verifique sua conexão ou tente novamente mais tarde.")
+    st.stop()
+
 st.sidebar.header('Filters')
 selected_stocks = st.sidebar.multiselect(
     'Select assets to view',
     options=data.columns.tolist(),
-    default=['Lojas Renner']
+    default=data.columns[:1].tolist() if not data.columns.empty else []
 )
 
-if selected_stocks:
-    data = data[selected_stocks]
-
-if not data.empty:
-    data.index = pd.to_datetime(data.index)
-    initial_date = data.index.min().to_pydatetime()
-    final_date = data.index.max().to_pydatetime()
-else:
-    st.error("Error: No data loaded. Check tickers or internet connection.")
+if not selected_stocks:
+    st.warning("Selecione pelo menos um ativo.")
     st.stop()
+
+data = data[selected_stocks]
+
+data.index = pd.to_datetime(data.index)
+initial_date = data.index.min().to_pydatetime()
+final_date = data.index.max().to_pydatetime()
 
 slider = st.sidebar.slider(
     'Select time range',

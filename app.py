@@ -26,17 +26,17 @@ def load_data(tickers_dict):
     start_date = '2010-01-01'
     end_date = dt.today().strftime('%Y-%m-%d')
 
-    stock_data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
+    stock_data = yf.download(tickers, start=start_date, end=end_date)
 
     close_prices = pd.DataFrame()
 
     for ticker, name in tickers_dict.items():
         try:
-            close_prices[name] = stock_data[ticker]['Close']
+            close_prices[name] = stock_data['Close'][ticker]
         except KeyError:
             st.warning(f"⚠️ No data found for ticker: {ticker}")
     
-    return close_prices
+    return close_prices.dropna(how='all')
 
 main_tickers = load_main_tickers()
 data = load_data(main_tickers)
@@ -79,7 +79,11 @@ portfolio = [1000 for _ in selected_stocks]
 initial_total = sum(portfolio)
 
 for i, stock in enumerate(selected_stocks):
-    perf = data[stock].iloc[-1] / data[stock].iloc[0] - 1
+    series = data[stock].dropna()
+    if len(series) < 2:
+        perf = 0
+    else:
+        perf = series.iloc[-1] / series.iloc[0] - 1
     portfolio[i] = portfolio[i] * (1 + perf)
 
     if perf > 0:

@@ -21,21 +21,21 @@ def load_main_tickers():
 
 @st.cache_data
 def load_data(tickers_dict):
-    tickers = list(tickers_dict.keys())
-    names = list(tickers_dict.values())
     start_date = '2010-01-01'
     end_date = dt.today().strftime('%Y-%m-%d')
-
-    stock_data = yf.download(tickers, start=start_date, end=end_date)
 
     close_prices = pd.DataFrame()
 
     for ticker, name in tickers_dict.items():
         try:
-            close_prices[name] = stock_data['Close'][ticker]
-        except KeyError:
-            st.warning(f"⚠️ No data found for ticker: {ticker}")
-    
+            df = yf.download(ticker, start=start_date, end=end_date)
+            if not df.empty and 'Close' in df.columns:
+                close_prices[name] = df['Close']
+            else:
+                st.warning(f"⚠️ Sem dados para o ticker: {ticker}")
+        except Exception as e:
+            st.warning(f"⚠️ Erro ao baixar {ticker}: {e}")
+
     return close_prices.dropna(how='all')
 
 main_tickers = load_main_tickers()

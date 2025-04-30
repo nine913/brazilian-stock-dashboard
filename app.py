@@ -23,7 +23,7 @@ def load_main_tickers():
 def load_data(tickers_dict):
     tickers = list(tickers_dict.keys())
     names = list(tickers_dict.values())
-    start_date = '2010-01-01'
+    start_date = '2020-01-01'  # Alterado para o novo intervalo
     end_date = dt.today().strftime('%Y-%m-%d')
 
     stock_data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
@@ -35,7 +35,7 @@ def load_data(tickers_dict):
             close_prices[name] = stock_data[ticker]['Close']
         except KeyError:
             st.warning(f"⚠️ Sem dados para o ticker: {ticker}")
-
+    
     return close_prices
 
 main_tickers = load_main_tickers()
@@ -44,18 +44,11 @@ data = load_data(main_tickers)
 st.title("📈 Brazilian Stock Dashboard")
 st.markdown("Visualize the historical performance of major Brazilian stocks.")
 
-if data.empty or data.columns.empty:
-    st.error("❌ Nenhum dado foi carregado. Pode ter ocorrido limite de requisições à API do Yahoo Finance. Tente novamente mais tarde.")
-    st.stop()
-
 st.sidebar.header('Filters')
-
-default_selection = data.columns[:1].tolist() if not data.columns.empty else []
-
 selected_stocks = st.sidebar.multiselect(
     'Select assets to view',
     options=data.columns.tolist(),
-    default=default_selection
+    default=['Lojas Renner']
 )
 
 if selected_stocks:
@@ -66,13 +59,13 @@ if not data.empty:
     initial_date = data.index.min().to_pydatetime()
     final_date = data.index.max().to_pydatetime()
 else:
-    st.error("❌ Nenhum dado disponível após filtro. Selecione outros ativos.")
+    st.error("Error: No data loaded. Check tickers or internet connection.")
     st.stop()
 
 slider = st.sidebar.slider(
     'Select time range',
-    min_value=initial_date,
-    max_value=final_date,
+    min_value=initial_date, 
+    max_value=final_date, 
     value=(initial_date, final_date),
     step=td(days=1)
 )

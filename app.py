@@ -21,22 +21,22 @@ def load_main_tickers():
 
 @st.cache_data
 def load_data(tickers_dict):
+    tickers = list(tickers_dict.keys())
+    names = list(tickers_dict.values())
     start_date = '2010-01-01'
     end_date = dt.today().strftime('%Y-%m-%d')
+
+    stock_data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
 
     close_prices = pd.DataFrame()
 
     for ticker, name in tickers_dict.items():
         try:
-            df = yf.download(ticker, start=start_date, end=end_date)
-            if not df.empty and 'Close' in df.columns:
-                close_prices[name] = df['Close']
-            else:
-                st.warning(f"⚠️ Sem dados para o ticker: {ticker}")
-        except Exception as e:
-            st.warning(f"⚠️ Erro ao baixar {ticker}: {e}")
-
-    return close_prices.dropna(how='all')
+            close_prices[name] = stock_data[ticker]['Close']
+        except KeyError:
+            st.warning(f"⚠️ Sem dados para o ticker: {ticker}")
+    
+    return close_prices
 
 main_tickers = load_main_tickers()
 data = load_data(main_tickers)
@@ -44,7 +44,7 @@ data = load_data(main_tickers)
 st.title("📈 Brazilian Stock Dashboard")
 st.markdown("Visualize the historical performance of major Brazilian stocks.")
 
-if data.empty:
+if data.empty or data.columns.empty:
     st.error("❌ Nenhum dado foi carregado. Verifique sua conexão ou tente novamente mais tarde.")
     st.stop()
 
@@ -52,18 +52,19 @@ st.sidebar.header('Filters')
 selected_stocks = st.sidebar.multiselect(
     'Select assets to view',
     options=data.columns.tolist(),
-    default=data.columns[:1].tolist() if not data.columns.empty else []
+    default=data.columns[:1].tolist()
 )
 
-if not selected_stocks:
-    st.warning("Selecione pelo menos um ativo.")
+if selected_stocks:
+    data = data[selected_stocks]
+
+if not data.empty:
+    data.index = pd.to_datetime(data.index)
+    initial_date = data.index.min().to_pydatetime()
+    final_date = data.index.max().to_pydatetime()
+else:
+    st.error("❌ Nenhum dado foi carregado. Verifique sua conexão ou tente novamente mais tarde.")
     st.stop()
-
-data = data[selected_stocks]
-
-data.index = pd.to_datetime(data.index)
-initial_date = data.index.min().to_pydatetime()
-final_date = data.index.max().to_pydatetime()
 
 slider = st.sidebar.slider(
     'Select time range',
@@ -82,11 +83,7 @@ portfolio = [1000 for _ in selected_stocks]
 initial_total = sum(portfolio)
 
 for i, stock in enumerate(selected_stocks):
-    series = data[stock].dropna()
-    if len(series) < 2:
-        perf = 0
-    else:
-        perf = series.iloc[-1] / series.iloc[0] - 1
+    perf = data[stock].iloc[-1] / data[stock].iloc[0] - 1
     portfolio[i] = portfolio[i] * (1 + perf)
 
     if perf > 0:

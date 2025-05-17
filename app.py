@@ -3,7 +3,9 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime as dt, timedelta as td
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",
+                   page_title='Brazilian Stock Dashboard',
+                   page_icon='📈')
 
 @st.cache_data
 def load_main_tickers():
@@ -23,7 +25,7 @@ def load_main_tickers():
 def load_data(tickers_dict):
     tickers = list(tickers_dict.keys())
     names = list(tickers_dict.values())
-    start_date = '2020-01-01'  # Alterado para o novo intervalo
+    start_date = '2025-01-01'
     end_date = dt.today().strftime('%Y-%m-%d')
 
     stock_data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
@@ -97,7 +99,7 @@ if total_perf > 0:
 elif total_perf < 0:
     summary += f"\n\nTotal portfolio performance: :red[{total_perf:.1%}]"
 else:
-    summary += f"\n\nTotal portfolio performance: {total_perf:.1%}"
+    summary += f"\n\nTotal portfolio performance: :yellow{total_perf:.1%}"
 
 st.markdown("### 📊 Asset Performance Summary")
 st.markdown(summary)

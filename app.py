@@ -99,7 +99,7 @@ if total_perf > 0:
 elif total_perf < 0:
     summary += f"\n\nTotal portfolio performance: :red[{total_perf:.1%}]"
 else:
-    summary += f"\n\nTotal portfolio performance: :yellow{total_perf:.1%}"
+    summary += f"\n\nTotal portfolio performance: :yellow[{total_perf:.1%}]"
 
 st.markdown("### 📊 Asset Performance Summary")
 st.markdown(summary)
